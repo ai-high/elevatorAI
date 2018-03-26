@@ -1,6 +1,6 @@
 
 from __future__ import print_function
-
+import random
 import numpy as np
 
 
@@ -37,13 +37,11 @@ class Building:
 
 
 class Person:
-	def __init__(self,floor,destination):
+	def __init__(self,floor,destination,elevator):
 		self.destination = destination
 		self.wait_time = 0
-		self.floor = 0
-		self.waiting = 0
-
-
+		self.floor = floor
+		self.elevator = elevator
 
 def curr_el_position():
 	f = []
@@ -70,7 +68,7 @@ def print_timestamp():
 		print("")
 		print('||', end = '')
 		for i in range(0,no_elevators):
-			if floor_no == pos[i]:
+			if floor_no + 1 == pos[i]:
 				print('  xx  ', end = '')
 			else:
 				print('      ', end = '')
@@ -95,6 +93,29 @@ def print_timestamp():
 		print('||', end = '')
 	print("")
 	print("\n\n------------------------------------------------------------\n")
+
+
+def update_wait_time():
+	for f in floors:
+		if(f.up):
+			f.upTime += 1
+		if f.down:
+			f.downTime += 1
+
+
+def get_reward():
+	return -len(people)
+
+def action():
+	return random.randint(0,15)
+
+def post_action():
+	for e in range(0,no_elevators):
+		for p in people[e]:
+			print("destination: " + str(p.destination))
+			print("elevator: "+ str(p.elevator))
+			print("")
+
 
 
 def prepare_tensor():
@@ -145,23 +166,38 @@ def prepare_tensor():
 # 15 - move down 7
 
 
+#####################################################
+###################   SET UP  #######################
+
 no_floors = 7
 no_elevators = 2
-
 building = Building(no_floors,no_elevators)
 elevators = []
 floors = []
+people = []
+
 for i in range(0,no_elevators):
 	elevators.append(Elevator(no_floors))
+	people.append([])
 for i in range(0,no_floors):
 	floors.append(Floor(i))
-elevators[0].move_up(1)
-elevators[1].move_up(3)
-print(curr_el_position())
+
 print_timestamp()
-elevators[0].move_up(1)
-elevators[1].move_up(3)
-floors[3].up = 1
-floors[1].down = 1
-print_timestamp()
-print(len(prepare_tensor()))
+
+#######################################################
+
+
+for i in range(0,10):
+	a = random.randint(0,7)
+	b = random.randint(0,7)
+	c = random.randint(0,1)
+	people[0].append(Person(a,b,c))
+
+for i in range(0,6):
+	a = random.randint(0,7)
+	b = random.randint(0,7)
+	c = random.randint(0,1)
+	people[1].append(Person(a,b,c))
+
+
+post_action()
