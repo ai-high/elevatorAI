@@ -37,11 +37,10 @@ class Building:
 
 
 class Person:
-	def __init__(self,floor,destination,elevator):
+	def __init__(self,floor,destination):
 		self.destination = destination
 		self.wait_time = 0
 		self.floor = floor
-		self.elevator = elevator
 
 def curr_el_position():
 	f = []
@@ -104,16 +103,28 @@ def update_wait_time():
 
 
 def get_reward():
-	return -len(people)
+	total = len(people_waiting)
+	for i in range(0,no_elevators+1):
+		total += len(people_in_lift[i])
+	return total
 
 def action():
 	return random.randint(0,15)
 
+def new_person(destination,floor):
+	if destination > floor:
+		floors[floor].up = 1
+		people_waiting.append(Person(floor,destination))
+	elif destination < floor:
+		floors[floor].down = 1
+		people_waiting.append(Person(floor,destination))
+
+
 def post_action():
 	for e in range(0,no_elevators):
-		for p in people[e]:
+		for p in people_in_lift[e]:
 			print("destination: " + str(p.destination))
-			print("elevator: "+ str(p.elevator))
+			print(e)
 			print("")
 
 
@@ -174,11 +185,12 @@ no_elevators = 2
 building = Building(no_floors,no_elevators)
 elevators = []
 floors = []
-people = []
+people_in_lift = []
+people_waiting = []
 
 for i in range(0,no_elevators):
 	elevators.append(Elevator(no_floors))
-	people.append([])
+	people_in_lift.append([])
 for i in range(0,no_floors):
 	floors.append(Floor(i))
 
@@ -190,14 +202,12 @@ print_timestamp()
 for i in range(0,10):
 	a = random.randint(0,7)
 	b = random.randint(0,7)
-	c = random.randint(0,1)
-	people[0].append(Person(a,b,c))
+	people_in_lift[0].append(Person(a,b))
 
 for i in range(0,6):
 	a = random.randint(0,7)
 	b = random.randint(0,7)
-	c = random.randint(0,1)
-	people[1].append(Person(a,b,c))
+	people_in_lift[1].append(Person(a,b))
 
 
 post_action()
