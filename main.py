@@ -97,3 +97,6 @@ print_timestamp()
 elevators[0].move_up(1)
 elevators[1].move_up(3)
 print_timestamp()
+
+
+#TEstsetsetsetse
