@@ -25,7 +25,9 @@ class Elevator:
 class Floor:
 	def __init__(self,floor_no):
 		self.up = 0
+		self.upTime = 0
 		self.down = 0
+		self.downTime = 0
 		self.floor_no = floor_no
 
 
@@ -33,7 +35,14 @@ class Building:
 	def __init__(self,floors,elevators):
 		self.floors = floors
 		self.elevators = elevators
-		self.queue = []
+
+
+class Person:
+	def __init__(self,destination):
+		self.destination = destination
+		self.wait_time = 0
+
+
 
 def curr_el_position():
 	f = []
@@ -55,6 +64,8 @@ def print_timestamp():
 		for i in range(0,no_elevators):
 			print('      ', end = '')
 			print('||', end = '')
+		print('Floor: '+str(floor_no), end = '')
+		floor_no = floor_no - 1
 		print("")
 		print('||', end = '')
 		for i in range(0,no_elevators):
@@ -63,13 +74,19 @@ def print_timestamp():
 			else:
 				print('      ', end = '')
 			print('||', end = '')
-		print('Floor: '+str(floor_no), end = '')
-		floor_no = floor_no - 1
+		if floors[floor_no].up:
+			print('Up Button Pressed!', end = '')
+			print('        ', end = '')
+			print('Waiting time: '+str(floors[floor_no].upTime), end = '')
 		print("")
 		print('||', end = '')
 		for i in range(0,no_elevators):
 			print('      ', end = '')
 			print('||', end = '')
+		if floors[floor_no].down:
+			print('Down Button Pressed!', end = '')
+			print('        ', end = '')
+			print('Waiting time: '+str(floors[floor_no].downTime), end = '')
 		print("")
 	print('||', end = '')
 	for i in range(0,no_elevators):
@@ -78,6 +95,16 @@ def print_timestamp():
 	print("")
 	print("\n\n------------------------------------------------------------\n")
 
+
+def prepare_tensor():
+	t = []
+	for e in elevators:
+		t.append(e.curr_floor)
+		t += e.buttons
+	for f in floors:
+		t.append(f.up)
+		t.append(f.down)
+	print(t)
 
 no_floors = 7
 no_elevators = 2
@@ -91,12 +118,11 @@ for i in range(0,no_floors):
 	floors.append(Floor(i))
 elevators[0].move_up(1)
 elevators[1].move_up(3)
-
 print(curr_el_position())
 print_timestamp()
 elevators[0].move_up(1)
 elevators[1].move_up(3)
+floors[3].up = 1
+floors[1].down = 1
 print_timestamp()
-
-
-#TEstsetsetsetse
+prepare_tensor()
