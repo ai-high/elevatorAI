@@ -2,6 +2,7 @@
 from __future__ import print_function
 import random
 import numpy as np
+import sys,time
 
 
 class Elevator:
@@ -18,9 +19,12 @@ class Elevator:
 			self.curr_floor = self.floors
 
 	def move_down(self,n):
-		self.curr_floor = curr_floor - n
+		self.curr_floor = self.curr_floor - n
 		if self.curr_floor < 0:
-			curr_floor = 0
+			self.curr_floor = 0
+
+	def take_action(self,action):
+		self.action = action
 
 class Floor:
 	def __init__(self,floor_no):
@@ -52,6 +56,7 @@ def curr_el_position():
 def print_timestamp():
 	floor_no = no_floors
 	pos = curr_el_position()
+	print("********** TIMESTEP NUBER "+str(time_step)+" **********")
 	for z in range(0,no_floors+1):
 		print('||', end = '')
 		for i in range(0,no_elevators):
@@ -63,12 +68,15 @@ def print_timestamp():
 			print('      ', end = '')
 			print('||', end = '')
 		print('Floor: '+str(floor_no), end = '')
-		floor_no = floor_no - 1
+		#floor_no = floor_no - 1
 		print("")
 		print('||', end = '')
 		for i in range(0,no_elevators):
-			if floor_no + 1 == pos[i]:
-				print('  xx  ', end = '')
+			if floor_no == pos[i]:
+				if actions[i] == 1:
+					print('xx  xx', end = '')
+				else:
+					print('  xx  ', end = '')
 			else:
 				print('      ', end = '')
 			print('||', end = '')
@@ -86,12 +94,16 @@ def print_timestamp():
 			print('        ', end = '')
 			print('Waiting time: '+str(floors[floor_no].downTime), end = '')
 		print("")
+		floor_no = floor_no - 1
 	print('||', end = '')
 	for i in range(0,no_elevators):
 		print('------', end = '')
 		print('||', end = '')
-	print("")
-	print("\n\n------------------------------------------------------------\n")
+	print("\n")
+	print("People waiting: "+str(len(people_waiting)))
+	print("People in Lift: "+str(no_people_in_lift()))
+	print("\n------------------------------------------------------------\n")
+
 
 
 def update_wait_time():
@@ -100,13 +112,21 @@ def update_wait_time():
 			f.upTime += 1
 		if f.down:
 			f.downTime += 1
+	for p in people_waiting:
+		p.wait_time+=1
+	for e in range(0,no_elevators):
+		for p in people_in_lift[e]:
+			p.wait_time+=1 
 
 
 def get_reward():
-	total = len(people_waiting)
-	for i in range(0,no_elevators+1):
-		total += len(people_in_lift[i])
-	return total
+	total = 0
+	for p in people_waiting:
+		total += p.wait_time
+	for e in range(0,no_elevators):
+		for p in people_in_lift[e]:
+			total += p.wait_time
+	return -total
 
 def action():
 	return random.randint(0,15)
@@ -123,10 +143,65 @@ def new_person(destination,floor):
 def post_action():
 	for e in range(0,no_elevators):
 		for p in people_in_lift[e]:
-			print("destination: " + str(p.destination))
-			print(e)
-			print("")
+			if actions[e] == 1 and p.destination == elevators[e].curr_floor:
+				## you have reached your destination
+				people_in_lift[e].remove(p)
+				delivered.append(0)
 
+
+	for i in range(0,no_elevators):
+		if actions[i] == 1:
+			f = elevators[i].curr_floor
+			for p in people_waiting:
+				if p.floor == f:
+					people_in_lift[i].append(p)
+					people_waiting.remove(p)
+					floors[f].up = 0
+					floors[f].upTime = 0
+					floors[f].down = 0
+					floors[f].downTime = 0
+
+
+
+def do_action():
+	for i in range(0,no_elevators):
+		if actions[i] == 1:
+			#open doors
+			continue
+		elif actions[i] == 2:
+			elevators[i].move_up(1)
+		elif actions[i] == 3:
+			elevators[i].move_up(2)
+		elif actions[i] == 4:
+			elevators[i].move_up(3)
+		elif actions[i] == 5:
+			elevators[i].move_up(4)
+		elif actions[i] == 6:
+			elevators[i].move_up(5)
+		elif actions[i] == 7:
+			elevators[i].move_up(6)
+		elif actions[i] == 8:
+			elevators[i].move_up(7)
+		elif actions[i] == 9:
+			elevators[i].move_down(1)
+		elif actions[i] == 10:
+			elevators[i].move_down(2)
+		elif actions[i] == 11:
+			elevators[i].move_down(3)
+		elif actions[i] == 12:
+			elevators[i].move_down(4)
+		elif actions[i] == 13:
+			elevators[i].move_down(5)
+		elif actions[i] == 14:
+			elevators[i].move_down(6)
+		elif actions[i] == 15:
+			elevators[i].move_down(7)
+
+def no_people_in_lift():
+	z = 0
+	for i in range(0,no_elevators):
+		z += len(people_in_lift[i])
+	return z
 
 
 def prepare_tensor():
@@ -139,6 +214,12 @@ def prepare_tensor():
 		t.append(f.down)
 	print(t)
 	return t
+
+
+def one_timestamp():
+	do_action()
+	post_action()
+	print_timestamp()
 
 
 ############################
@@ -180,6 +261,8 @@ def prepare_tensor():
 #####################################################
 ###################   SET UP  #######################
 
+time_step = 0
+actions = []
 no_floors = 7
 no_elevators = 2
 building = Building(no_floors,no_elevators)
@@ -188,26 +271,75 @@ floors = []
 people_in_lift = []
 people_waiting = []
 
+#only because global varibles are fked
+delivered = []
+
 for i in range(0,no_elevators):
 	elevators.append(Elevator(no_floors))
 	people_in_lift.append([])
-for i in range(0,no_floors):
+	actions.append(0)
+for i in range(0,no_floors+1):
 	floors.append(Floor(i))
 
 print_timestamp()
 
 #######################################################
 
+for z in range(0,100):
+	if z%3==0:
+		r = random.randint(0,7)
+		r2 = random.randint(0,7)
+		new_person(r,r2)
+	a1 = random.randint(0,15)
+	a2 = random.randint(0,15)
+	actions = [a1,a2]
+	do_action()
+	post_action()
+	update_wait_time()
+	print_timestamp()
+	print("people delivered: "+str(len(delivered)))
+	reward = get_reward()
+	print("*****************")
+	print("REWARD: "+str(reward))
+	print("*****************")
+	time_step+=1
+	time.sleep(.2)
 
-for i in range(0,10):
-	a = random.randint(0,7)
-	b = random.randint(0,7)
-	people_in_lift[0].append(Person(a,b))
-
-for i in range(0,6):
-	a = random.randint(0,7)
-	b = random.randint(0,7)
-	people_in_lift[1].append(Person(a,b))
-
-
+'''
+new_person(5,0)
+print_timestamp()
+reward = get_reward()
+print("*****************")
+print("REWARD: "+str(reward))
+print("*****************")
+time.sleep(1)
+actions = [0,1]
+do_action()
 post_action()
+update_wait_time()
+print_timestamp()
+reward = get_reward()
+print("*****************")
+print("REWARD: "+str(reward))
+print("*****************")
+time.sleep(1)
+actions = [0,6]
+do_action()
+post_action()
+update_wait_time()
+print_timestamp()
+reward = get_reward()
+print("*****************")
+print("REWARD: "+str(reward))
+print("*****************")
+time.sleep(1)
+actions = [0,1]
+do_action()
+post_action()
+update_wait_time()
+print_timestamp()
+reward = get_reward()
+print("*****************")
+print("REWARD: "+str(reward))
+print("*****************")
+'''
