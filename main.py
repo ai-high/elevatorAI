@@ -145,6 +145,7 @@ def post_action():
 		for p in people_in_lift[e]:
 			if actions[e] == 1 and p.destination == elevators[e].curr_floor:
 				## you have reached your destination
+				elevators[e].buttons[elevators[e].curr_floor] = 0
 				people_in_lift[e].remove(p)
 				delivered.append(0)
 
@@ -155,6 +156,7 @@ def post_action():
 			for p in people_waiting:
 				if p.floor == f:
 					people_in_lift[i].append(p)
+					elevators[i].buttons[p.destination] = 1
 					people_waiting.remove(p)
 					floors[f].up = 0
 					floors[f].upTime = 0
@@ -212,7 +214,6 @@ def prepare_tensor():
 	for f in floors:
 		t.append(f.up)
 		t.append(f.down)
-	print(t)
 	return t
 
 
@@ -285,7 +286,7 @@ print_timestamp()
 
 #######################################################
 
-for z in range(0,100):
+for z in range(0,500):
 	if z%3==0:
 		r = random.randint(0,7)
 		r2 = random.randint(0,7)
@@ -298,12 +299,13 @@ for z in range(0,100):
 	update_wait_time()
 	print_timestamp()
 	print("people delivered: "+str(len(delivered)))
+	print(prepare_tensor())
 	reward = get_reward()
 	print("*****************")
 	print("REWARD: "+str(reward))
 	print("*****************")
 	time_step+=1
-	time.sleep(.2)
+	time.sleep(.5)
 
 '''
 new_person(5,0)
