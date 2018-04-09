@@ -141,6 +141,8 @@ def new_person(destination,floor):
 
 
 def post_action():
+
+	#getting people out of lift
 	for e in range(0,no_elevators):
 		for p in people_in_lift[e]:
 			if actions[e] == 1 and p.destination == elevators[e].curr_floor:
@@ -149,19 +151,42 @@ def post_action():
 				people_in_lift[e].remove(p)
 				delivered.append(0)
 
-
+	#putting people in lift
 	for i in range(0,no_elevators):
 		if actions[i] == 1:
 			f = elevators[i].curr_floor
 			for p in people_waiting:
+				print(p.destination)
 				if p.floor == f:
-					people_in_lift[i].append(p)
-					elevators[i].buttons[p.destination] = 1
-					people_waiting.remove(p)
-					floors[f].up = 0
-					floors[f].upTime = 0
-					floors[f].down = 0
-					floors[f].downTime = 0
+					up_down = 0
+					#0 = no direction, 1 = up, 2 = down
+					direction = 0
+					for b in elevators[i].buttons:
+						if b == 1:
+							if up_down > f:
+								direction = 1
+							elif up_down < f:
+								direction = 2
+							break
+						up_down+=1
+
+					getIn = 0
+					if p.destination>f and direction == 1:
+						getIn = 1
+					elif p.destination<f and direction == 2:
+						getIn = 1
+					elif direction == 0:
+						getIn = 1 
+
+					if getIn:
+						print("GOT IN")
+						people_in_lift[i].append(p)
+						elevators[i].buttons[p.destination] = 1
+						people_waiting.remove(p)
+						floors[f].up = 0
+						floors[f].upTime = 0
+						floors[f].down = 0
+						floors[f].downTime = 0
 
 
 
@@ -220,6 +245,7 @@ def prepare_tensor():
 def one_timestamp():
 	do_action()
 	post_action()
+	update_wait_time()
 	print_timestamp()
 
 
@@ -286,6 +312,29 @@ print_timestamp()
 
 #######################################################
 
+new_person(5,0)
+new_person(7,0)
+new_person(2,5)
+for p in people_waiting:
+	print("***********")
+	print(p.destination)
+	print(p.floor)
+	print("**********")
+actions = [0,1]
+one_timestamp()
+
+
+
+
+
+
+
+
+
+
+
+
+"""
 for z in range(0,500):
 	if z%3==0:
 		r = random.randint(0,7)
@@ -306,10 +355,14 @@ for z in range(0,500):
 	print("*****************")
 	time_step+=1
 	time.sleep(.5)
+"""
 
-'''
+"""
 new_person(5,0)
+new_person(7,0)
+new_person(2,5)
 print_timestamp()
+print(prepare_tensor())
 reward = get_reward()
 print("*****************")
 print("REWARD: "+str(reward))
@@ -320,6 +373,7 @@ do_action()
 post_action()
 update_wait_time()
 print_timestamp()
+print(prepare_tensor())
 reward = get_reward()
 print("*****************")
 print("REWARD: "+str(reward))
@@ -330,6 +384,7 @@ do_action()
 post_action()
 update_wait_time()
 print_timestamp()
+print(prepare_tensor())
 reward = get_reward()
 print("*****************")
 print("REWARD: "+str(reward))
@@ -340,8 +395,54 @@ do_action()
 post_action()
 update_wait_time()
 print_timestamp()
+print(prepare_tensor())
 reward = get_reward()
 print("*****************")
 print("REWARD: "+str(reward))
 print("*****************")
-'''
+time.sleep(1)
+actions = [0,3]
+do_action()
+post_action()
+update_wait_time()
+print_timestamp()
+print(prepare_tensor())
+reward = get_reward()
+print("*****************")
+print("REWARD: "+str(reward))
+print("*****************")
+time.sleep(1)
+actions = [0,1]
+do_action()
+post_action()
+update_wait_time()
+print_timestamp()
+print(prepare_tensor())
+reward = get_reward()
+print("*****************")
+print("REWARD: "+str(reward))
+print("*****************")
+time.sleep(1)
+actions = [0,10]
+do_action()
+post_action()
+update_wait_time()
+print_timestamp()
+print(prepare_tensor())
+reward = get_reward()
+print("*****************")
+print("REWARD: "+str(reward))
+print("*****************")
+time.sleep(1)
+actions = [0,1]
+do_action()
+post_action()
+update_wait_time()
+print_timestamp()
+print(prepare_tensor())
+reward = get_reward()
+print("*****************")
+print("REWARD: "+str(reward))
+print("*****************")
+"""
+
